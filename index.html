@@ -112,8 +112,8 @@
     <h1>Sleep Cycle Calculator</h1>
 
     <div class="toggle">
-      <button id="modeBed" class="active">Bed → Wake</button>
-      <button id="modeWake">Wake → Bed</button>
+      <button id="modeBed" class="active">Calculate Wake-up Time</button>
+      <button id="modeWake">Calculate Bedtime</button>
     </div>
 
     <div id="bedMode">
@@ -126,14 +126,14 @@
       <input type="time" id="waketime" />
     </div>
 
-    <label>Time to fall asleep (min)</label>
-    <input type="number" id="winddown" value="30" />
+    <label>Time to fall asleep: <span id="windVal">30</span> min</label>
+    <input type="range" id="winddown" min="0" max="60" step="5" value="30" />
 
     <label>Sleep cycles</label>
     <select id="cycles">
-      <option value="4">4 cycles</option>
-      <option value="5" selected>5 cycles</option>
-      <option value="6">6 cycles</option>
+      <option value="4">4 cycles (6 hours)</option>
+      <option value="5" selected>5 cycles (7.5 hours)</option>
+      <option value="6">6 cycles (9 hours)</option>
     </select>
 
     <button class="calc" id="calcBtn">Calculate</button>
@@ -207,10 +207,15 @@
 
   window.onload = () => {
     winddown.value = localStorage.winddown || 30;
+    document.getElementById('windVal').textContent = winddown.value;
     cycles.value = localStorage.cycles || 5;
     bedtime.value = localStorage.bedtime || '';
     waketime.value = localStorage.waketime || '';
     setMode(mode);
+
+    winddown.oninput = () => {
+      document.getElementById('windVal').textContent = winddown.value;
+    };
   };
 </script>
 </body>
