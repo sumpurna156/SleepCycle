@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sleep Cycle Calculator</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #020617;
+      padding: 24px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .toggle {
+      display: flex;
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .toggle button {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .toggle button.active {
+      background: #6366f1;
+      color: white;
+    }
+    label {
+      font-size: 0.85rem;
+      margin-top: 12px;
+      display: block;
+      color: #cbd5f5;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 10px;
+      border: none;
+      background: #1e293b;
+      color: #e5e7eb;
+      font-size: 1rem;
+    }
+    button.calc {
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: #6366f1;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .timeline {
+      margin-top: 18px;
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      padding: 12px;
+      display: none;
+    }
+    .bar {
+      display: flex;
+      height: 14px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #1e293b;
+    }
+    .wind { background: #475569; }
+    .sleep { background: #6366f1; }
+    .labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+    .result {
+      margin-top: 14px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sleep Cycle Calculator</h1>
+
+    <div class="toggle">
+      <button id="modeBed" class="active">Bed → Wake</button>
+      <button id="modeWake">Wake → Bed</button>
+    </div>
+
+    <div id="bedMode">
+      <label>Bedtime</label>
+      <input type="time" id="bedtime" />
+    </div>
+
+    <div id="wakeMode" style="display:none;">
+      <label>Wake-up time</label>
+      <input type="time" id="waketime" />
+    </div>
+
+    <label>Time to fall asleep (min)</label>
+    <input type="number" id="winddown" value="30" />
+
+    <label>Sleep cycles</label>
+    <select id="cycles">
+      <option value="4">4 cycles</option>
+      <option value="5" selected>5 cycles</option>
+      <option value="6">6 cycles</option>
+    </select>
+
+    <button class="calc" id="calcBtn">Calculate</button>
+
+    <div class="result" id="result"></div><div class="sleep" id="sleepBar"></div>
+      </div>
+      <div class="labels">
+        <span id="labelStart"></span>
+        <span id="labelEnd"></span>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const modeBedBtn = document.getElementById('modeBed');
+  const modeWakeBtn = document.getElementById('modeWake');
+  const bedMode = document.getElementById('bedMode');
+  const wakeMode = document.getElementById('wakeMode');
+  const result = document.getElementById('result');
+  const timeline = document.getElementById('timeline');
+
+  let mode = localStorage.getItem('mode') || 'bed';
+
+  function setMode(newMode) {
+    mode = newMode;
+    localStorage.setItem('mode', mode);
+
+    modeBedBtn.classList.toggle('active', mode === 'bed');
+    modeWakeBtn.classList.toggle('active', mode === 'wake');
+
+    bedMode.style.display = mode === 'bed' ? 'block' : 'none';
+    wakeMode.style.display = mode === 'wake' ? 'block' : 'none';
+
+    result.textContent = '';
+    
+  }
+
+  modeBedBtn.onclick = () => setMode('bed');
+  modeWakeBtn.onclick = () => setMode('wake');
+
+  document.getElementById('calcBtn').onclick = () => {
+    const wind = parseInt(winddown.value, 10);
+    const cyclesVal = parseInt(cycles.value, 10);
+    const sleepMin = cyclesVal * 90;
+    const total = wind + sleepMin;
+
+    let startMin, endMin;
+
+    if (mode === 'bed') {
+      if (!bedtime.value) return;
+      const [h, m] = bedtime.value.split(':').map(Number);
+      startMin = h * 60 + m;
+      endMin = (startMin + total) % 1440;
+      result.innerHTML = `Wake up at <strong>${fmt(endMin)}</strong>`;
+    } else {
+      if (!waketime.value) return;
+      const [h, m] = waketime.value.split(':').map(Number);
+      endMin = h * 60 + m;
+      startMin = (endMin - total + 1440) % 1440;
+      result.innerHTML = `Go to bed at <strong>${fmt(startMin)}</strong>`;
+    }
+
+    localStorage.winddown = winddown.value;
+    localStorage.cycles = cycles.value;
+    localStorage.bedtime = bedtime.value;
+    localStorage.waketime = waketime.value;
+  };
+  function fmt(min) {
+    return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+  }
+
+  window.onload = () => {
+    winddown.value = localStorage.winddown || 30;
+    cycles.value = localStorage.cycles || 5;
+    bedtime.value = localStorage.bedtime || '';
+    waketime.value = localStorage.waketime || '';
+    setMode(mode);
+  };
+</script>
+</body>
+</html>
